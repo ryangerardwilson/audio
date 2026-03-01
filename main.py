@@ -225,11 +225,11 @@ def set_output_target(target: str, sinks: list[Sink], options: list[OutputOption
     option_targets = {option.target for option in options}
 
     if target in option_targets and ":" in target:
-        sink_name, port_name = target.split(":", 1)
+        sink_name, port_name = target.rsplit(":", 1)
     elif target in sink_names:
         sink_name = target
     elif ":" in target:
-        candidate_sink, candidate_port = target.split(":", 1)
+        candidate_sink, candidate_port = target.rsplit(":", 1)
         if candidate_sink not in sink_names:
             raise ValueError(f"Sink '{candidate_sink}' not found.")
         sink_name = candidate_sink
