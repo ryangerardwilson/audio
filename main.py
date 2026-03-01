@@ -5,11 +5,15 @@ from __future__ import annotations
 
 import argparse
 import json
+from pathlib import Path
 import shutil
 import subprocess
 import sys
+import tempfile
 from dataclasses import dataclass, field
 from typing import List, Optional
+
+__version__ = "0.1.0"
 
 
 @dataclass
@@ -293,6 +297,18 @@ def build_parser() -> argparse.ArgumentParser:
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument(
+        "-v",
+        action="version",
+        version=__version__,
+        help="Show version and exit.",
+    )
+    parser.add_argument(
+        "-u",
+        dest="upgrade",
+        action="store_true",
+        help="Upgrade to latest release using install.sh.",
+    )
+    parser.add_argument(
         "--list",
         action="store_true",
         help="List output devices and exit.",
@@ -305,8 +321,39 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def _upgrade_to_latest() -> int:
+    curl = shutil.which("curl")
+    bash = shutil.which("bash")
+    if not curl:
+        print("curl not found in PATH.", file=sys.stderr)
+        return 1
+    if not bash:
+        print("bash not found in PATH.", file=sys.stderr)
+        return 1
+
+    url = "https://raw.githubusercontent.com/ryangerardwilson/audio/main/install.sh"
+    with tempfile.NamedTemporaryFile(suffix=".sh", delete=False) as tmp:
+        tmp_path = Path(tmp.name)
+
+    try:
+        fetch = subprocess.run([curl, "-fsSL", url, "-o", str(tmp_path)])
+        if fetch.returncode != 0:
+            return fetch.returncode
+        run = subprocess.run([bash, str(tmp_path)])
+        return run.returncode
+    finally:
+        try:
+            tmp_path.unlink(missing_ok=True)
+        except OSError:
+            pass
+
+
 def main() -> int:
     args = build_parser().parse_args()
+
+    if args.upgrade:
+        return _upgrade_to_latest()
+
     require_pactl()
 
     try:

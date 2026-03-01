@@ -12,32 +12,39 @@ CLI for listing and switching Linux audio output devices via `pactl` (PulseAudio
 Run interactively:
 
 ```bash
-python3 main.py
+audio
 ```
 
 List available output targets:
 
 ```bash
-python3 main.py --list
+audio --list
 ```
 
 Set output target directly:
 
 ```bash
-python3 main.py --set <sink>
-python3 main.py --set <sink:port>
+audio --set <sink>
+audio --set <sink:port>
+```
+
+Show version / upgrade:
+
+```bash
+audio -v
+audio -u
 ```
 
 Examples:
 
 ```bash
-python3 main.py --set alsa_output.pci-0000_00_1f.3.analog-stereo
-python3 main.py --set alsa_output.pci-0000_00_1f.3.analog-stereo:analog-output-headphones
+audio --set alsa_output.pci-0000_00_1f.3.analog-stereo
+audio --set alsa_output.pci-0000_00_1f.3.analog-stereo:analog-output-headphones
 ```
 
 ## Bluetooth pairing
 
-Pairing is done manually with `bluetoothctl` (also shown in `python3 main.py -h`):
+Pairing is done manually with `bluetoothctl` (also shown in `audio -h`):
 
 ```bash
 bluetoothctl
@@ -51,7 +58,7 @@ trust <MAC>
 connect <MAC>
 ```
 
-After connecting the speaker, run `python3 main.py` and choose the listed Bluetooth device (for example `Stone 180 -> Headset`).
+After connecting the speaker, run `audio` and choose the listed Bluetooth device (for example `Stone 180 -> Headset`).
 
 ## Install from releases
 
