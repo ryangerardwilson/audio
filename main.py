@@ -276,8 +276,21 @@ def choose_option_interactively(options: list[OutputOption]) -> str:
 
 
 def build_parser() -> argparse.ArgumentParser:
+    pairing_help = """Bluetooth pairing (manual, outside this app):
+  bluetoothctl
+  power on
+  agent on
+  default-agent
+  scan on
+  # put speaker in pairing mode now
+  pair <MAC>
+  trust <MAC>
+  connect <MAC>
+"""
     parser = argparse.ArgumentParser(
-        description="List and switch audio output devices (sinks)."
+        description="List and switch audio output devices (sinks).",
+        epilog=pairing_help,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument(
         "--list",

@@ -35,6 +35,24 @@ python3 main.py --set alsa_output.pci-0000_00_1f.3.analog-stereo
 python3 main.py --set alsa_output.pci-0000_00_1f.3.analog-stereo:analog-output-headphones
 ```
 
+## Bluetooth pairing
+
+Pairing is done manually with `bluetoothctl` (also shown in `python3 main.py -h`):
+
+```bash
+bluetoothctl
+power on
+agent on
+default-agent
+scan on
+# put speaker in pairing mode now
+pair <MAC>
+trust <MAC>
+connect <MAC>
+```
+
+After connecting the speaker, run `python3 main.py` and choose the listed Bluetooth device (for example `Stone 180 -> Headset`).
+
 ## Install from releases
 
 Installer script (expects repo `ryangerardwilson/audio`):
