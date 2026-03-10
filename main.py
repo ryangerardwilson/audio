@@ -13,7 +13,7 @@ import tempfile
 from dataclasses import dataclass, field
 from typing import List, Optional
 
-__version__ = "0.1.0"
+from _version import __version__
 
 
 @dataclass
