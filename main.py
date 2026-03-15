@@ -14,6 +14,38 @@ from dataclasses import dataclass, field
 from typing import List, Optional
 
 from _version import __version__
+from rgw_cli_contract import AppSpec, resolve_install_script_path, run_app
+
+
+INSTALL_SCRIPT = resolve_install_script_path(__file__)
+HELP_TEXT = """audio
+
+flags:
+  audio -h
+    show this help
+  audio -v
+    print the installed version
+  audio -u
+    upgrade to the latest release
+
+features:
+  launch the interactive output switcher
+  # audio
+  audio
+
+  list all available output targets
+  # audio --list
+  audio --list
+
+  set a target directly by sink or sink:port
+  # audio --set <target>
+  audio --set alsa_output.pci-0000_00_1f.3.analog-stereo
+  audio --set bluez_output.12_34_56_78_9A_BC.a2dp-sink:headset-output
+
+  bluetooth pairing remains manual outside the app
+  # bluetoothctl
+  bluetoothctl
+"""
 
 
 @dataclass
@@ -280,33 +312,9 @@ def choose_option_interactively(options: list[OutputOption]) -> str:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    pairing_help = """Bluetooth pairing (manual, outside this app):
-  bluetoothctl
-  power on
-  agent on
-  default-agent
-  scan on
-  # put speaker in pairing mode now
-  pair <MAC>
-  trust <MAC>
-  connect <MAC>
-"""
     parser = argparse.ArgumentParser(
         description="List and switch audio output devices (sinks).",
-        epilog=pairing_help,
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-    )
-    parser.add_argument(
-        "-v",
-        action="version",
-        version=__version__,
-        help="Show version and exit.",
-    )
-    parser.add_argument(
-        "-u",
-        dest="upgrade",
-        action="store_true",
-        help="Upgrade to latest release using install.sh.",
+        add_help=False,
     )
     parser.add_argument(
         "--list",
@@ -321,39 +329,8 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def _upgrade_to_latest() -> int:
-    curl = shutil.which("curl")
-    bash = shutil.which("bash")
-    if not curl:
-        print("curl not found in PATH.", file=sys.stderr)
-        return 1
-    if not bash:
-        print("bash not found in PATH.", file=sys.stderr)
-        return 1
-
-    url = "https://raw.githubusercontent.com/ryangerardwilson/audio/main/install.sh"
-    with tempfile.NamedTemporaryFile(suffix=".sh", delete=False) as tmp:
-        tmp_path = Path(tmp.name)
-
-    try:
-        fetch = subprocess.run([curl, "-fsSL", url, "-o", str(tmp_path)])
-        if fetch.returncode != 0:
-            return fetch.returncode
-        run = subprocess.run([bash, str(tmp_path)])
-        return run.returncode
-    finally:
-        try:
-            tmp_path.unlink(missing_ok=True)
-        except OSError:
-            pass
-
-
-def main() -> int:
-    args = build_parser().parse_args()
-
-    if args.upgrade:
-        return _upgrade_to_latest()
-
+def _dispatch(argv: list[str]) -> int:
+    args = build_parser().parse_args(argv)
     require_pactl()
 
     try:
@@ -391,6 +368,20 @@ def main() -> int:
         print(f"Error: {exc}", file=sys.stderr)
         return 1
     return 0
+
+
+APP_SPEC = AppSpec(
+    app_name="audio",
+    version=__version__,
+    help_text=HELP_TEXT,
+    install_script_path=INSTALL_SCRIPT,
+    no_args_mode="dispatch",
+)
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = list(sys.argv[1:] if argv is None else argv)
+    return run_app(APP_SPEC, args, _dispatch)
 
 
 if __name__ == "__main__":
